@@ -1,56 +1,74 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Send, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
-import emailjs from "@emailjs/browser";
+import emailjs from "@emailjs/browser"; // ✅ Import EmailJS
 
 function Contact() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
+    rating: "",         // ⭐ Added rating state
+    feedbackText: "",   // 📝 Added feedback text state
   });
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-
-  // Initialize EmailJS with your credentials
-  useEffect(() => {
-    emailjs.init("7GSbsLXsskGaK2E1B"); // This is your EMAIL_PK (Public Key)
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
+    const serviceID = "service_9kwy5sl";
+    const templateID = "template_leho5uh";
+    const publicKey = "fQtTb5FRPGKZKkIP9";
+
     try {
-      // Send the email using EmailJS
-      await emailjs.send(
-        "service_x5w8icq", // This is your EMAIL_SID (Service ID)
-        "template_wmgeyzi", // This is your EMAIL_TID (Template ID)
+      const result = await emailjs.send(
+        serviceID,
+        templateID,
         {
           from_name: formData.name,
           from_email: formData.email,
           message: formData.message,
-        }
+          rating: formData.rating || "No rating",                // ⭐ Added rating to email
+          feedback: formData.feedbackText || "No additional feedback", // 📝 Added feedback text to email
+        },
+        publicKey
       );
 
-      toast.success("Message sent successfully!");
-      setFormData({ name: "", email: "", message: "" });
+      if (result.status === 200) {
+        toast.success("Message sent successfully!");
+        setFormData({
+          name: "",
+          email: "",
+          message: "",
+          rating: "",         // Reset rating
+          feedbackText: "",   // Reset feedback text
+        });
+      } else {
+        toast.error("Failed to send message");
+      }
     } catch (error) {
-      console.error("Failed to send message:", error);
-      toast.error("Failed to send message");
+      console.error("EmailJS error:", error);
+      toast.error("Something went wrong");
     } finally {
       setIsLoading(false);
     }
-
-    setFormData({ name: "", email: "", message: "" });
   };
 
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
+    }));
+  };
+
+  // Handle star rating click
+  const handleRatingChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      rating: value,
     }));
   };
 
@@ -100,7 +118,7 @@ function Contact() {
                 transition={{ delay: 0.2, duration: 0.5 }}
               >
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
+                  <div cla>
                     <label
                       htmlFor="name"
                       className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1"
@@ -158,6 +176,52 @@ function Contact() {
                       className="w-full px-4 py-2 dark:text-white rounded-lg bg-white/30 dark:bg-gray-700/30 border border-gray-300/50 dark:border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     />
                   </div>
+
+                  {/* === START Added Feedback Section === */}
+
+                  {/* Star Rating */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">
+                      Rate Us
+                    </label>
+                    <div className="flex space-x-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => handleRatingChange(star)}
+                          className={`text-2xl transition-colors ${
+                            formData.rating >= star
+                              ? "text-yellow-400"
+                              : "text-gray-400"
+                          }`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Feedback Textarea */}
+                  <div>
+                    <label
+                      htmlFor="feedbackText"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 mt-4"
+                    >
+                      Additional Feedback (optional)
+                    </label>
+                    <textarea
+                      id="feedbackText"
+                      name="feedbackText"
+                      value={formData.feedbackText}
+                      onChange={handleChange}
+                      rows="3"
+                      className="w-full px-4 py-2 dark:text-white rounded-lg bg-white/30 dark:bg-gray-700/30 border border-gray-300/50 dark:border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      placeholder="Let us know more..."
+                    />
+                  </div>
+
+                  {/* === END Added Feedback Section === */}
 
                   <motion.button
                     type="submit"
@@ -220,7 +284,7 @@ function Contact() {
                           href="mailto:contact@bookstore.com"
                           className="text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                         >
-                          shivamgaur24august@gmail.com
+                          divyanshtripathi204@gmail.com
                         </a>
                       </div>
                     </div>
@@ -237,7 +301,7 @@ function Contact() {
                           href="tel:+15551234567"
                           className="text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                         >
-                          +91 9667454815
+                          +91 8318548946
                         </a>
                       </div>
                     </div>
@@ -250,15 +314,14 @@ function Contact() {
                         <p className="text-xs text-start font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Address
                         </p>
-                        <p className="text-sm text-start font-medium text-gray-900 dark:text-white">
-                          Noida <br /> Near Sector 15, LC 12345
-                        </p>
+                        <address className="not-italic text-sm font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                          India
+                        </address>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Business Hours Card */}
+                 {/* Business Hours Card */}
                 <div className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
                   {/* Card Header */}
                   <div className="bg-blue-600/10 dark:bg-blue-900/20 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50">
@@ -311,30 +374,18 @@ function Contact() {
                     </ul>
                   </div>
                 </div>
+
+                {/* Back To Home Link */}
+                <Link
+                  to="/"
+                  className="inline-flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Home</span>
+                </Link>
               </motion.div>
             </div>
           </div>
-        </motion.div>
-
-        {/* Back to home link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="mt-6 text-center"
-        >
-          <Link
-            to="/"
-            className="inline-flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors group"
-          >
-            <motion.span
-              whileHover={{ x: -3 }}
-              className="mr-1 group-hover:-translate-x-0.5 transition-transform"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </motion.span>
-            Return to homepage
-          </Link>
         </motion.div>
       </motion.div>
     </div>
